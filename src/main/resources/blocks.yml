@@ -1,0 +1,159 @@
+# Forma 커스텀 블럭 설정 (blocks.yml)
+#
+# 파일 사용법
+# - 최상위 키(예: leaf_ore)가 블럭 ID입니다.
+# - /forma block get <id>로 지급되는 아이템에는 forma:block_id가 저장됩니다.
+# - 설치 후 월드 위치와 ID는 blocks-data.yml에 저장되어 서버 재시작 후에도 유지됩니다.
+# - 수정 후 /forma block reload를 실행하고, 외형 변경은 /forma pack generate로 반영합니다.
+#
+# 주요 명령어
+# - /forma block get <id> [amount]
+# - /forma block give <player> <id> [amount]
+# - /forma block list
+# - /forma block reload
+# - /forma pack generate
+#
+# 설계 개념
+# - Forma의 블럭 ID와 월드에 보이는 바닐라 blockstate는 별개입니다.
+# - item.*  : 인벤토리에서 들고 설치하는 아이템 정의입니다. 권장 material은 PAPER입니다.
+#              NOTE_BLOCK이 아닌 PAPER를 사용하면 바닐라 노트블럭 우클릭 충돌을 피할 수 있습니다.
+# - name    : 블럭 설치 아이템의 표시 이름입니다. 최상위에 작성합니다. MiniMessage/& 색 코드 지원.
+# - state.* : 월드에 실제 설치될 visual provider, blockstate variation, 블럭 모델을 정의합니다.
+# - settings.hardness/tool : 현재 데이터로 보관되는 블럭 설정입니다.
+# - settings.sounds.* : 설치/파괴 등의 소리 정의. Bukkit Sound 이름 또는 "forma:..." 키 사용 가능
+# - drops  : 파괴 시 드롭할 ID 목록 (items.yml ID 또는 blocks.yml ID)
+# - recipe : 이 블럭 설치 아이템을 제작하는 조합법입니다. items.yml/blocks.yml ID를 재료로 사용할 수 있습니다.
+#            커스텀 ID 재료는 PDC가 같은 Forma 아이템만 인정하며 PAPER 같은 기반 재질로 대체되지 않습니다.
+#
+# item 섹션
+# - material          : 설치 아이템의 바닐라 재질입니다. PAPER 권장. 월드에 설치되는 재질이 아닙니다.
+# - model             : 설치 아이템의 item_model 키입니다. 예: "forma:leaf_ore"
+# - custom-model-data : CUSTOM_MODEL_DATA 모드 또는 item_model fallback용 숫자입니다.
+# - lore              : 설치 아이템의 설명 줄 목록입니다.
+#
+# state.provider란?
+# - 하나의 커스텀 블럭 외형을 보여 주기 위해 월드에 실제 배치할 vanilla blockstate 공급자입니다.
+# - 리소스팩은 provider의 state를 block model에 연결하고, storage는 해당 위치의 Forma ID를 기억합니다.
+# - 따라서 다른 플러그인에서 실제 블럭 Material을 확인하면 provider의 바닐라 재질이 보입니다.
+#
+# 사용 가능한 state.provider
+# - SOLID                : 권장 고체 블럭 provider. 현재 내부적으로 BROWN_MUSHROOM_BLOCK을 사용합니다.
+#                          note 소리 상호작용이 없으며, variation은 1~64 또는 auto입니다.
+# - BROWN_MUSHROOM_BLOCK : SOLID의 실제 provider를 명시적으로 선택합니다. variation은 1~64 또는 auto입니다.
+#                          6방향 boolean 상태 조합을 안정적인 순서로 사용합니다.
+# - NOTE_BLOCK           : legacy/특수 용도 provider. variation은 1~800 또는 auto입니다.
+#                          노트블럭 상태를 사용하므로 일반 노트블럭과 외형 충돌 완화 로직이 적용됩니다.
+#
+# state.variation
+# - 숫자 : 해당 provider의 정해진 visual state를 고정 배정합니다. 같은 state 중복은 스킵됩니다.
+# - auto : 사용 가능한 state를 자동 배정하고 plugins/Forma/cache/visual_block_states.json에 저장합니다.
+#          리로드/재시작 후에도 캐시가 유지되는 한 같은 visual state가 사용됩니다.
+#
+# 리소스팩 원본 파일 위치
+# - resourcepack/textures/block/<block-id>.png : 블럭 텍스처
+# - resourcepack/models/block/<block-id>.json  : 선택적 커스텀 블럭 모델. 없으면 cube_all 생성
+# - resourcepack/textures/item/<model-id>.png  : 선택적 설치 아이템 전용 텍스처
+# - resourcepack/models/item/<model-id>.json   : 선택적 설치 아이템 전용 모델
+# - 설치 아이템 모델/텍스처가 없으면 블럭 모델/텍스처를 재사용합니다.
+#
+# 1) 새 provider 방식 (권장)
+#    state:
+#      provider: SOLID | BROWN_MUSHROOM_BLOCK | NOTE_BLOCK
+#      variation: auto | 숫자
+#      model: "forma:block/<id>"
+#
+# 2) 기존 NOTE_BLOCK 호환 방식
+#    - type에서 실제 지원하는 legacy 방식은 NOTE_BLOCK입니다.
+#    - TRIPWIRE, DISPLAY는 향후 확장 예약 타입이며 현재 설치 provider로 사용하지 않습니다.
+#    type: NOTE_BLOCK
+#    block:
+#      variation: 1
+#      # 또는 instrument/note/powered 직접 지정
+#      # instrument: BASS_DRUM
+#      # note: 0
+#      # powered: false
+#      model: "forma:block/<id>"
+#
+# legacy NOTE_BLOCK variation 매핑
+# - 1  -> BASS_DRUM / note 0 / powered false
+# - 25 -> BASS_DRUM / note 24 / powered false
+# - 26 -> BASS_DRUM / note 0 / powered true
+# - 51 -> 다음 instrument / note 0 / powered false
+# - instrument를 직접 쓸 경우 BASS_DRUM과 basedrum 양쪽 형식을 모두 허용합니다.
+#
+# 사운드 설정 예시
+# - 현재 설치 성공 시 place, 파괴 성공 시 break가 재생됩니다.
+# - step/hit/fall 값도 사운드 설정 데이터로 읽어 두며 관련 동작 확장에 사용할 수 있습니다.
+# - 해당 값이 없으면 provider Material의 기본 SoundGroup 소리를 사용합니다.
+#    settings:
+#      sounds:
+#        place: "BLOCK_STONE_PLACE"          # 또는 "forma:block.leaf_ore.place"
+#        break: "BLOCK_STONE_BREAK"
+#        step: "BLOCK_STONE_STEP"
+#        hit: "BLOCK_STONE_HIT"
+#        fall: "BLOCK_STONE_FALL"
+#        volume: 1.0
+#        pitch: 1.0
+#    place를 생략하면 실제 visual provider 블럭의 기본 설치 소리를 사용합니다.
+#
+# drops/recipe 재료 규칙
+# - drops가 비어 있거나 모든 ID가 잘못되면 자기 자신 블럭 아이템이 드롭됩니다.
+# - drops의 ID가 items.yml에 있으면 커스텀 아이템, blocks.yml에 있으면 블럭 설치 아이템을 드롭합니다.
+# - recipe의 재료는 Material 이름(STONE), items.yml ID(leaf_gem), blocks.yml ID(leaf_ore)를 쓸 수 있습니다.
+
+leaf_ore:
+  # 표시 이름을 지정하려면 최상위에 name: "<#7CFF6B>Leaf Ore"를 추가합니다.
+  item:
+    # 인벤토리 아이템만 PAPER이며, 설치된 월드 블럭은 아래 provider가 결정합니다.
+    material: PAPER
+    model: "forma:leaf_ore"
+    custom-model-data: 3001
+    lore:
+      - "&7잎의 힘이 담긴 광석"
+  settings:
+    hardness: 3.0
+    tool: PICKAXE
+    sounds:
+      place: "BLOCK_STONE_PLACE"
+      break: "BLOCK_STONE_BREAK"
+      step: "BLOCK_STONE_STEP"
+      hit: "BLOCK_STONE_HIT"
+      fall: "BLOCK_STONE_FALL"
+      volume: 1.0
+      pitch: 1.0
+  state:
+    # SOLID는 현재 BROWN_MUSHROOM_BLOCK visual state를 사용합니다.
+    provider: SOLID
+    # auto는 캐시 파일을 이용해 충돌 없는 state를 자동 예약합니다.
+    variation: auto
+    model: "forma:block/leaf_ore"
+  drops:
+    - "leaf_gem"
+  recipe:
+    # leaf_gem 9개로 Forma leaf_ore 블럭 아이템 하나를 만듭니다.
+    type: SHAPED
+    pattern:
+      - "GGG"
+      - "GGG"
+      - "GGG"
+    ingredients:
+      G: leaf_gem
+    amount: 1
+
+# NOTE_BLOCK legacy 호환 예시: 신규 고체 블럭은 위 SOLID 형식을 권장합니다.
+leaf_log:
+  type: NOTE_BLOCK
+  name: "<#8B5A2B>Leaf Log"
+  item:
+    material: PAPER
+    model: "forma:leaf_log"
+    custom-model-data: 3002
+    lore:
+      - "&7잎나무 원목"
+  block:
+    model: "forma:block/leaf_log"
+    hardness: 2.0
+    tool: AXE
+    variation: 2
+  drops:
+    - "leaf_log"

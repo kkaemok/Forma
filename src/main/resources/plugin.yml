@@ -1,0 +1,28 @@
+﻿name: Forma
+version: 1.0.0
+main: org.kkaemok.forma.Forma
+api-version: '1.21'
+commands:
+  forma:
+    description: Forma main command
+    usage: |
+      /forma <give|get|list|reload|pack|block|recipe>
+      /forma give <player> <id> [amount]
+      /forma get <id> [amount]
+      /forma list
+      /forma reload
+      /forma pack <generate|reload>
+      /forma pack generate
+      /forma pack reload
+      /forma block <give|get|list|reload>
+      /forma block give <player> <id> [amount]
+      /forma block get <id> [amount]
+      /forma block list
+      /forma block reload
+      /forma recipe <reload|list>
+      /forma recipe reload
+      /forma recipe list
+    permission: forma.op
+permissions:
+  forma.op:
+    default: op

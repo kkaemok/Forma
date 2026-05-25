@@ -1,0 +1,124 @@
+# Forma 기본 설정
+#
+# 이 파일은 플러그인 전역 동작을 제어합니다.
+# - 커스텀 아이템/조합법 정의: items.yml
+# - 커스텀 블럭/드롭/블럭 조합법 정의: blocks.yml
+# - 설치된 커스텀 블럭 위치 데이터: blocks-data.yml (자동 관리, 수동 편집 비권장)
+# - 자동 배정 visual state 캐시: cache/visual_block_states.json (자동 관리)
+#
+# 주요 명령어
+# - /forma reload
+# - /forma pack generate
+# - /forma pack reload
+#
+# 모든 Forma 명령어는 plugin.yml의 forma.op 권한으로 관리됩니다.
+# /forma reload는 config.yml, items.yml, blocks.yml, 조합법, visual state 캐시를 다시 읽습니다.
+
+# 아이템 모델과 리소스팩에 사용하는 기본 namespace입니다.
+# 예: forma:leaf_blade, forma:block/leaf_ore
+# items.yml/blocks.yml의 model에서 namespace를 생략했을 때에도 이 값이 사용됩니다.
+# 리소스팩 생성 시 model의 namespace와 이 값이 다르면 콘솔에 경고가 출력됩니다.
+namespace: forma
+
+# 커스텀 아이템 모델 적용 방식
+# - ITEM_MODEL: Minecraft 1.21.11의 minecraft:item_model 컴포넌트를 우선 사용합니다.
+#               item_model 적용이 실패하면 해당 아이템의 custom-model-data 값으로 fallback합니다.
+# - CUSTOM_MODEL_DATA: items.yml/blocks.yml의 custom-model-data를 사용합니다.
+# ITEM_MODEL 모드는 /data get entity @s SelectedItem에서 minecraft:item_model로 확인할 수 있습니다.
+model-mode: ITEM_MODEL
+
+# true이면 아이템 적용, durability/attributes, behavior, 블럭 설치 pipeline,
+# visual state 배정, 조합법 등록/차단, 리소스팩 생성 상세 로그를 콘솔에 출력합니다.
+debug: true
+
+items:
+  # items.yml의 attributes를 적용할 때 기존 바닐라 attribute modifier를 제거할지 결정합니다.
+  # true : 커스텀 attack_damage/attack_speed 등으로 대체하는 무기/방어구에 적합합니다.
+  # false: 바닐라 modifier 위에 Forma modifier가 추가됩니다.
+  replace-vanilla-attributes: true
+
+  # behaviors.right_click의 쿨타임 중 아이템을 다시 사용할 때 표시할 메시지입니다.
+  # %time%은 남은 시간을 초 단위 문자열로 바꿉니다.
+  behavior-cooldown-message: "<red>아직 사용할 수 없습니다. 남은 시간: %time%"
+
+recipes:
+  # true이면 Forma 커스텀 아이템/블럭 아이템은 바닐라 Material 재료 자리에 들어갈 수 없습니다.
+  # items.yml 또는 blocks.yml recipe에서 ID로 직접 지정한 ExactChoice 재료로만 소비됩니다.
+  # 예: leaf_gem 기반 재질이 EMERALD여도 EMERALD 레시피 재료로는 소비되지 않습니다.
+  prevent-custom-items-as-vanilla-ingredients: true
+
+custom-blocks:
+  # 커스텀 블럭 시스템 전체 활성화 여부입니다.
+  # false이면 설치/파괴/NOTE_BLOCK 보호 리스너가 커스텀 블럭을 처리하지 않습니다.
+  enabled: true
+
+  # 서버 시작 시 blocks-data.yml의 좌표와 실제 월드 블럭이 다를 때
+  # true이면 데이터 제거, false이면 경고만 출력합니다.
+  remove-missing-block-data: true
+
+  # NOTE_BLOCK legacy provider 블럭의 음 변경을 원래 상태로 복구합니다.
+  # SOLID/BROWN_MUSHROOM_BLOCK provider에는 적용되지 않습니다.
+  prevent-note-block-interaction: true
+
+  # NOTE_BLOCK legacy provider 블럭의 레드스톤/물리 상태 변화를 복구합니다.
+  # provider의 visual state가 바뀌어 리소스팩 외형이 손상되는 것을 완화합니다.
+  prevent-redstone-update: true
+
+  # true이면 SHORT_GRASS, TALL_GRASS, FERN, LARGE_FERN, SNOW, VINE,
+  # GLOW_LICHEN을 커스텀 블럭 설치 대상으로 대체할 수 있습니다.
+  # AIR/WATER/LAVA는 이 옵션과 관계없이 설치 검사 대상에 포함됩니다.
+  allow-replaceable-placement: true
+
+  # NOTE_BLOCK provider는 vanilla blockstate와 리소스팩 모델을 공유하므로,
+  # 일반 노트블럭이 같은 state가 되면 외형상 커스텀 블럭처럼 보일 수 있습니다.
+  # true이면 일반 NOTE_BLOCK이 Forma 예약 상태가 되는 것을 차단/완화합니다.
+  prevent-reserved-note-block-states: true
+
+  # storage에 없는 일반 NOTE_BLOCK이 예약 상태가 되면 기본 상태로 복구합니다.
+  # storage에 등록된 진짜 Forma 블럭은 자신의 설정 state로 복구됩니다.
+  reset-unregistered-reserved-note-blocks: true
+
+  # Place Pipeline이 설치에 성공했을 때 blocks.yml settings.sounds.place 소리를 재생합니다.
+  # 소리가 설정되지 않으면 visual provider 재질의 기본 설치 소리를 사용합니다.
+  play-place-sound: true
+
+  # 커스텀 블럭이 정상적으로 파괴되었을 때 settings.sounds.break 또는 기본 소리를 재생합니다.
+  play-break-sound: true
+
+  # true이면 PAPER 기반 커스텀 블럭 설치 성공 시 플레이어 손 휘두름을 표시합니다.
+  swing-hand-on-place: true
+
+  # true이면 설치 성공 시 Bukkit GameEvent.BLOCK_PLACE를 월드에 전송합니다.
+  send-game-event: true
+
+  # PAPER 기반 커스텀 블럭은 바닐라가 자동으로 BlockPlaceEvent를 만들지 않으므로,
+  # true이면 Forma Place Pipeline이 Bukkit BlockPlaceEvent를 호출해 보호 플러그인이 검사할 수 있게 합니다.
+  # 취소되면 설치를 rollback하고 아이템을 소비하지 않습니다.
+  call-bukkit-block-place-event: true
+
+resource-pack:
+  # false이면 /forma pack generate 명령을 실행할 수 없습니다.
+  enabled: true
+
+  # true이면 items.yml 리소스와 함께 blocks.yml의 블럭 model/texture/blockstate 파일도 생성합니다.
+  # provider에 따라 assets/minecraft/blockstates/brown_mushroom_block.json 또는 note_block.json이 포함됩니다.
+  generate-blocks: true
+
+  # 출력 zip 파일의 메타데이터와 generated 폴더 내 파일명입니다.
+  pack-name: "Forma-Pack"
+  pack-description: "Forma Resource Pack"
+  output-file: "Forma-Pack.zip"
+
+  # 입력 리소스 파일 위치:
+  # - plugins/Forma/resourcepack/textures/item/<id>.png
+  # - plugins/Forma/resourcepack/models/item/<id>.json      (선택, 없으면 자동 생성)
+  # - plugins/Forma/resourcepack/textures/block/<id>.png
+  # - plugins/Forma/resourcepack/models/block/<id>.json     (선택, 없으면 자동 생성)
+  # 출력 위치:
+  # - plugins/Forma/generated/<output-file>
+  #
+  # Minecraft 1.21.11용 pack.mcmeta의 min_format/max_format 배열입니다.
+  # 단일 pack_format 값이 아니라 아래 배열 값으로 생성됩니다.
+  pack-version:
+    min: [75, 0]
+    max: [75, 0]

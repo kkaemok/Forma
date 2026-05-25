@@ -1,0 +1,157 @@
+# Forma 커스텀 아이템 설정 (items.yml)
+#
+# 파일 사용법
+# - 최상위 키(예: leaf_gem, sinhyeon_ryu)가 아이템 ID입니다.
+# - ID는 명령어, recipe 재료, PDC 식별자에서 그대로 사용됩니다.
+# - 수정 후 /forma reload 또는 /forma recipe reload를 실행합니다.
+# - model에 사용한 ID의 텍스처는 resourcepack/textures/item/<model-id>.png에 넣고
+#   /forma pack generate로 리소스팩 zip을 생성합니다.
+#
+# 주요 명령어
+# - /forma get <id> [amount]
+# - /forma give <player> <id> [amount]
+# - /forma list
+# - /forma recipe list
+# - /forma recipe reload
+# - /forma reload
+#
+# type (필수)
+# - ITEM       : 일반 아이템. 기본 모델 parent는 minecraft:item/generated입니다.
+# - WEAPON     : 검/무기용. 기본 모델 parent는 minecraft:item/handheld이며 durability를 지원합니다.
+# - TOOL       : 곡괭이/도끼 등 도구용. handheld 모델과 durability를 지원합니다.
+# - ARMOR      : 방어구 분류. durability 및 방어구 슬롯 attribute 추론을 지원합니다.
+# - CONSUMABLE : 추후 소비 동작 확장을 위한 분류입니다. 현재 별도 소비 효과는 자동 적용되지 않습니다.
+# - BLOCK_ITEM : 분류용 타입입니다. 설치 가능한 Forma 블럭 아이템은 blocks.yml에서 정의합니다.
+#
+# item 섹션
+# - material          : Bukkit Material 이름입니다. 예: EMERALD, NETHERITE_SWORD, DIAMOND_PICKAXE
+# - name              : MiniMessage 및 & 색 코드를 사용할 수 있는 표시 이름입니다.
+# - model             : item_model 키입니다. "forma:leaf_gem" 형태를 권장합니다.
+#                       namespace를 생략하면 config.yml의 namespace가 사용됩니다.
+# - custom-model-data : model-mode=CUSTOM_MODEL_DATA이거나 item_model 적용 실패 시 사용할 fallback 숫자입니다.
+# - lore              : MiniMessage 또는 & 색 코드 줄 목록입니다.
+#
+# settings 섹션
+# - glow            : true이면 인챈트 광택만 보이도록 적용합니다.
+# - unbreakable     : true이면 파괴 불가로 표시하며 custom max_damage 적용은 건너뜁니다.
+# - hide-tooltip    : true이면 전체 툴팁을 숨깁니다.
+# - hide-attributes : true이면 attribute 표시 줄을 숨깁니다.
+# - max-stack-size  : 1~64. durability 아이템은 보통 1을 사용합니다.
+# - durability.max/current:
+#     WEAPON, TOOL, ARMOR에서 사용합니다.
+#     max는 실제 minecraft:max_damage, current는 현재 남은 내구도입니다.
+#     게임 내 minecraft:damage 값은 max - current로 계산됩니다.
+#
+# attributes 섹션
+# - attack_damage, attack_speed, armor, armor_toughness, knockback_resistance, movement_speed 지원
+# - 도구/무기는 HAND, HELMET/CHESTPLATE/LEGGINGS/BOOTS는 해당 장비 슬롯에 modifier가 적용됩니다.
+# - 기존 바닐라 attribute를 유지할지는 config.yml의 items.replace-vanilla-attributes로 정합니다.
+#
+# behaviors.right_click 섹션
+# - 메인 손으로 우클릭할 때 순서대로 실행됩니다. blocks.yml의 설치 아이템에는 실행되지 않습니다.
+# - type: sound   -> sound, volume, pitch 사용. Bukkit Sound 이름 또는 "namespace:key" 사운드 키 허용
+# - type: message -> message 사용. MiniMessage 및 %player%, %item_id% 치환 지원
+# - type: command -> command, sender 사용. sender는 CONSOLE 또는 PLAYER
+# - cooldown      -> 생략 또는 0이면 없음. 정수와 단위 ms/s/m/h 사용 가능: 500ms, 3s, 1m
+#
+# recipe 섹션
+# - type: SHAPED 또는 SHAPELESS
+# - SHAPED는 pattern과 문자별 ingredients 맵을 사용합니다.
+# - SHAPELESS는 ingredients 목록을 사용합니다.
+# - amount는 결과 수량이며 1~64입니다.
+# - ingredients에 items.yml ID 또는 blocks.yml ID를 쓰면 해당 커스텀 아이템만 재료로 인정합니다.
+# - EMERALD, PAPER 같은 Material 재료 자리에는 Forma 커스텀 아이템/블럭 아이템이 들어가지 않습니다.
+#
+# 기존 호환 형식
+# - 기존 평평한 material/name/model/lore/glow/unbreakable/durability/damage 구조도 작동합니다.
+# - 기존 damage 값은 새 attributes.attack_damage의 fallback으로 읽습니다.
+# debug: true일 때만 legacy 형식 사용 로그가 출력됩니다.
+
+leaf_gem:
+  # ITEM / WEAPON / TOOL / ARMOR / CONSUMABLE / BLOCK_ITEM
+  type: ITEM
+  item:
+    # 아이템의 바닐라 기반 재질입니다.
+    material: EMERALD
+    name: "<#7CFF6B>Leaf Gem"
+    # /data get entity @s SelectedItem의 minecraft:item_model에 적용될 키입니다.
+    model: "forma:leaf_gem"
+    custom-model-data: 2001
+    lore:
+      - "&7잎의 기운이 담긴 보석"
+  settings:
+    glow: true
+    max-stack-size: 64
+
+sinhyeon_ryu:
+  type: WEAPON
+  item:
+    material: NETHERITE_SWORD
+    name: "<gradient:#A7F85B:#16A34A>신현류</gradient>"
+    model: "forma:sinhyeon_ryu"
+    custom-model-data: 1001
+    lore:
+      - "&7잎의 힘이 깃든 검"
+      - "&aForma 커스텀 무기"
+  settings:
+    glow: true
+    unbreakable: false
+    hide-tooltip: false
+    hide-attributes: false
+    max-stack-size: 1
+    durability:
+      # max_damage=2500, damage=max-current=0으로 생성됩니다.
+      max: 2500
+      current: 2500
+  attributes:
+    # config의 replace-vanilla-attributes=true이면 이 값이 바닐라 공격 수치를 대체합니다.
+    attack_damage: 9
+    attack_speed: 1.6
+  behaviors:
+    right_click:
+      - type: sound
+        sound: "BLOCK_AMETHYST_BLOCK_CHIME"
+        volume: 1.0
+        pitch: 1.2
+        cooldown: 3s
+      - type: message
+        message: "<#7CFF6B>신현류의 기운이 느껴집니다."
+        cooldown: 3s
+  recipe:
+    type: SHAPED
+    pattern:
+      - " L "
+      - " L "
+      - " S "
+    ingredients:
+      L: leaf_gem # items.yml의 커스텀 아이템 ID
+      S: STICK    # Bukkit Material 이름
+    amount: 1
+
+# 기존 평평한 형식 호환 예시입니다.
+leaf_pickaxe:
+  type: TOOL
+  material: DIAMOND_PICKAXE
+  name: "<#7CFF6B>Leaf Pickaxe"
+  model: "forma:leaf_pickaxe"
+  custom-model-data: 1101
+  lore:
+    - "&7잎의 힘이 담긴 곡괭이"
+  unbreakable: false
+  glow: false
+  durability:
+    max: 1800
+    current: 1800
+
+# SHAPELESS 예시:
+# leaf_fragment:
+#   type: ITEM
+#   item:
+#     material: PRISMARINE_SHARD
+#     model: "forma:leaf_fragment"
+#   recipe:
+#     type: SHAPELESS
+#     ingredients:
+#       - leaf_gem
+#       - DIAMOND
+#     amount: 1
