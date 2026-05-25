@@ -165,13 +165,11 @@ minecraft:damage = max - current
 attributes:
   attack_damage: 9
   attack_speed: 1.6
-  armor: 0
-  armor_toughness: 0
-  knockback_resistance: 0
-  movement_speed: 0
 ```
 
-`config.yml`의 `items.replace-vanilla-attributes: true`이면 기존 바닐라 modifier를 제거하고 Forma 값으로 구성합니다.
+`config.yml`의 `items.replace-vanilla-attributes: true`이면 기존 바닐라 modifier를 제거하고 작성값을 플레이어가 장착했을 때의 최종 능력치로 해석합니다. 예를 들어 `attack_damage: 9`는 최종 공격력 `9`, `attack_speed: 1.6`은 최종 공격 속도 `1.6`이 되도록 내부 modifier를 각각 플레이어 기본값 `1`과 `4`에서 보정합니다. `movement_speed`도 기본 이동 속도 `0.1`을 포함한 최종값이며, 바꾸지 않을 필드는 생략합니다.
+
+`replace-vanilla-attributes: false`이면 작성값은 기존 바닐라 attribute 위에 추가되는 `ADD_NUMBER` 보너스입니다.
 
 ## 커스텀 블럭
 

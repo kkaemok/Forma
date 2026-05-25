@@ -45,7 +45,11 @@
 # attributes 섹션
 # - attack_damage, attack_speed, armor, armor_toughness, knockback_resistance, movement_speed 지원
 # - 도구/무기는 HAND, HELMET/CHESTPLATE/LEGGINGS/BOOTS는 해당 장비 슬롯에 modifier가 적용됩니다.
-# - 기존 바닐라 attribute를 유지할지는 config.yml의 items.replace-vanilla-attributes로 정합니다.
+# - config.yml의 items.replace-vanilla-attributes: true이면 작성값은 플레이어 기준 최종 목표값입니다.
+#     attack_damage: 9  -> 최종 공격력 9 (내부 modifier +8, 플레이어 기본 공격력 1 포함)
+#     attack_speed: 1.6 -> 최종 공속 1.6 (내부 modifier -2.4, 플레이어 기본 공속 4 포함)
+#     movement_speed는 기본값 0.1을 포함한 최종값으로 작성합니다. 변경하지 않으려면 생략합니다.
+# - replace-vanilla-attributes: false이면 작성값은 기존 바닐라 수치에 더해지는 추가 보너스입니다.
 #
 # behaviors.right_click 섹션
 # - 메인 손으로 우클릭할 때 순서대로 실행됩니다. blocks.yml의 설치 아이템에는 실행되지 않습니다.
@@ -104,7 +108,7 @@ sinhyeon_ryu:
       max: 2500
       current: 2500
   attributes:
-    # config의 replace-vanilla-attributes=true이면 이 값이 바닐라 공격 수치를 대체합니다.
+    # replace-vanilla-attributes=true일 때 최종 공격력 9, 최종 공속 1.6으로 적용됩니다.
     attack_damage: 9
     attack_speed: 1.6
   behaviors:

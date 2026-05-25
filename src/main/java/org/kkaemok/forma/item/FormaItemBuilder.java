@@ -23,6 +23,10 @@ import java.util.Locale;
 import java.util.Objects;
 
 public final class FormaItemBuilder {
+    private static final double PLAYER_BASE_ATTACK_DAMAGE = 1.0D;
+    private static final double PLAYER_BASE_ATTACK_SPEED = 4.0D;
+    private static final double PLAYER_BASE_MOVEMENT_SPEED = 0.1D;
+
     private final Forma plugin;
 
     public FormaItemBuilder(Forma plugin) {
@@ -341,22 +345,29 @@ public final class FormaItemBuilder {
             return false;
         }
 
-        if (plugin.getConfig().getBoolean("items.replace-vanilla-attributes", true)) {
+        boolean replaceVanillaAttributes = plugin.getConfig().getBoolean("items.replace-vanilla-attributes", true);
+        if (replaceVanillaAttributes) {
             meta.setAttributeModifiers(null);
         }
         EquipmentSlotGroup slot = inferEquipmentSlot(item.material());
         int applied = 0;
-        applied += addAttribute(meta, item, "attack_damage", Attribute.ATTACK_DAMAGE, attributes.attackDamage(), slot);
-        applied += addAttribute(meta, item, "attack_speed", Attribute.ATTACK_SPEED, attributes.attackSpeed(), slot);
-        applied += addAttribute(meta, item, "armor", Attribute.ARMOR, attributes.armor(), slot);
-        applied += addAttribute(meta, item, "armor_toughness", Attribute.ARMOR_TOUGHNESS, attributes.armorToughness(), slot);
+        applied += addAttribute(meta, item, "attack_damage", Attribute.ATTACK_DAMAGE, attributes.attackDamage(),
+                PLAYER_BASE_ATTACK_DAMAGE, replaceVanillaAttributes, slot);
+        applied += addAttribute(meta, item, "attack_speed", Attribute.ATTACK_SPEED, attributes.attackSpeed(),
+                PLAYER_BASE_ATTACK_SPEED, replaceVanillaAttributes, slot);
+        applied += addAttribute(meta, item, "armor", Attribute.ARMOR, attributes.armor(),
+                0.0D, replaceVanillaAttributes, slot);
+        applied += addAttribute(meta, item, "armor_toughness", Attribute.ARMOR_TOUGHNESS, attributes.armorToughness(),
+                0.0D, replaceVanillaAttributes, slot);
         applied += addAttribute(meta, item, "knockback_resistance", Attribute.KNOCKBACK_RESISTANCE,
-                attributes.knockbackResistance(), slot);
-        applied += addAttribute(meta, item, "movement_speed", Attribute.MOVEMENT_SPEED, attributes.movementSpeed(), slot);
+                attributes.knockbackResistance(), 0.0D, replaceVanillaAttributes, slot);
+        applied += addAttribute(meta, item, "movement_speed", Attribute.MOVEMENT_SPEED, attributes.movementSpeed(),
+                PLAYER_BASE_MOVEMENT_SPEED, replaceVanillaAttributes, slot);
 
         if (plugin.getConfig().getBoolean("debug", false)) {
             plugin.getLogger().info("[DEBUG] attributes item id=" + item.id()
-                    + ", applied=" + applied + ", slot=" + slot);
+                    + ", applied=" + applied + ", slot=" + slot
+                    + ", mode=" + (replaceVanillaAttributes ? "FINAL_PLAYER_VALUE" : "ADDITIVE_MODIFIER"));
         }
         return applied > 0;
     }
@@ -366,23 +377,34 @@ public final class FormaItemBuilder {
             FormaItem item,
             String key,
             Attribute attribute,
-            Double value,
+            Double configuredValue,
+            double playerBaseValue,
+            boolean finalPlayerValue,
             EquipmentSlotGroup slot
     ) {
-        if (value == null) {
+        if (configuredValue == null) {
             return 0;
         }
+        double modifierValue = finalPlayerValue ? configuredValue - playerBaseValue : configuredValue;
         NamespacedKey modifierKey = new NamespacedKey(
                 plugin,
                 ("item_" + item.id() + "_" + key).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9/._-]", "_")
         );
         AttributeModifier modifier = new AttributeModifier(
                 modifierKey,
-                value,
+                modifierValue,
                 AttributeModifier.Operation.ADD_NUMBER,
                 slot
         );
-        return meta.addAttributeModifier(attribute, modifier) ? 1 : 0;
+        boolean applied = meta.addAttributeModifier(attribute, modifier);
+        if (applied && plugin.getConfig().getBoolean("debug", false)) {
+            plugin.getLogger().info("[DEBUG] attribute id=" + item.id()
+                    + ", key=" + key
+                    + ", configured=" + configuredValue
+                    + ", modifier=" + modifierValue
+                    + ", base=" + playerBaseValue);
+        }
+        return applied ? 1 : 0;
     }
 
     private EquipmentSlotGroup inferEquipmentSlot(org.bukkit.Material material) {

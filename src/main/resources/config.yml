@@ -32,9 +32,12 @@ model-mode: ITEM_MODEL
 debug: true
 
 items:
-  # items.yml의 attributes를 적용할 때 기존 바닐라 attribute modifier를 제거할지 결정합니다.
-  # true : 커스텀 attack_damage/attack_speed 등으로 대체하는 무기/방어구에 적합합니다.
-  # false: 바닐라 modifier 위에 Forma modifier가 추가됩니다.
+  # items.yml의 attributes 값 해석과 기존 바닐라 attribute modifier 제거 여부입니다.
+  # true : 기존 modifier를 제거하고 작성값을 "플레이어가 장착했을 때의 최종 값"으로 적용합니다.
+  #        예: attack_damage: 9 -> 최종 공격력 9, attack_speed: 1.6 -> 최종 공격 속도 1.6
+  #        내부 modifier는 플레이어 기본값(공격력 1, 공속 4, 이동 속도 0.1)을 빼서 계산합니다.
+  # false: 기존 바닐라 modifier를 유지하고 작성값을 추가 ADD_NUMBER 보너스로 적용합니다.
+  #        예: attack_speed: 1.6 -> 기존 공속에 +1.6
   replace-vanilla-attributes: true
 
   # behaviors.right_click의 쿨타임 중 아이템을 다시 사용할 때 표시할 메시지입니다.
